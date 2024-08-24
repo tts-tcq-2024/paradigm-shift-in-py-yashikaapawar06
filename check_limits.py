@@ -6,30 +6,33 @@ class PrintReporter(Reporter):
     def report(self, message):
         print(message)
 
-def check_value_in_range(value, min_value, max_value, parameter_name, reporter):
-    if value < min_value:
-        reporter.report(f'{parameter_name} is too low! Value: {value}')
+def is_in_range(value, min_value, max_value):
+    return min_value <= value <= max_value
+
+def check_temperature(temperature, reporter):
+    if not is_in_range(temperature, 0, 45):
+        reporter.report(f'Temperature is out of range! Value: {temperature}')
         return False
-    if value > max_value:
-        reporter.report(f'{parameter_name} is too high! Value: {value}')
+    return True
+
+def check_soc(soc, reporter):
+    if not is_in_range(soc, 20, 80):
+        reporter.report(f'State of Charge is out of range! Value: {soc}')
+        return False
+    return True
+
+def check_charge_rate(charge_rate, reporter):
+    if not is_in_range(charge_rate, 0, 0.8):
+        reporter.report(f'Charge Rate is out of range! Value: {charge_rate}')
         return False
     return True
 
 def battery_is_ok(temperature, soc, charge_rate, reporter):
-    parameters = {
-        'Temperature': (temperature, 0, 45),
-        'State of Charge': (soc, 20, 80),
-        'Charge Rate': (charge_rate, 0, 0.8),
-    }
-    for param, (value, min_value, max_value) in parameters.items():
-        if value < min_value:
-            reporter.report(f'{param} is too low! Value: {value}')
-            return False
-        if value > max_value:
-            reporter.report(f'{param} is too high! Value: {value}')
-            return False
-
-    return True
+    return all([
+        check_temperature(temperature, reporter),
+        check_soc(soc, reporter),
+        check_charge_rate(charge_rate, reporter)
+    ])
     
 if __name__ == '__main__':
     reporter = PrintReporter()
