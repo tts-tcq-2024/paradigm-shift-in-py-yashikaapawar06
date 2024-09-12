@@ -1,42 +1,36 @@
-class Reporter:
-    def report(self, message):
-        raise NotImplementedError("Subclass must implement abstract method")
+from abc import ABC, abstractmethod
 
-class PrintReporter(Reporter):
+class Reporter(ABC):
+    @abstractmethod
     def report(self, message):
-        print(message)
+        pass
+
+class DetailedReporter(Reporter):
+    def report(self, message):
+        print(f'Detailed report:{message}')
 
 def is_in_range(value, min_value, max_value):
     return min_value <= value <= max_value
 
-def check_temperature(temperature, reporter):
-    if not is_in_range(temperature, 0, 45):
-        reporter.report(f'Temperature is out of range! Value: {temperature}')
+def check_parameter(parameter_name, value, min_value, max_value, reporter):
+    if value < min_value:
+        reporter.report(f'{parameter_name} is too low! Value: {value}, Min: {min_value}')
         return False
-    return True
-
-def check_soc(soc, reporter):
-    if not is_in_range(soc, 20, 80):
-        reporter.report(f'State of Charge is out of range! Value: {soc}')
-        return False
-    return True
-
-def check_charge_rate(charge_rate, reporter):
-    if not is_in_range(charge_rate, 0, 0.8):
-        reporter.report(f'Charge Rate is out of range! Value: {charge_rate}')
+    elif value > max_value:
+        reporter.report(f'{parameter_name} is too high! Value: {value}, Max: {max_value}')
         return False
     return True
 
 def battery_is_ok(temperature, soc, charge_rate, reporter):
     return all([
-        check_temperature(temperature, reporter),
-        check_soc(soc, reporter),
-        check_charge_rate(charge_rate, reporter)
+        check_parameter("Temperature", temperature, 0, 45, reporter),
+        check_parameter("State of Charge", soc, 20, 80, reporter),
+        check_parameter("Charge Rate", charge_rate, 0, 0.8, reporter)
     ])
-    
+
 if __name__ == '__main__':
-    reporter = PrintReporter()
-    assert(battery_is_ok(25, 70, 0.7, reporter) is True) #All parameters within range
-    assert(battery_is_ok(50, 85, 0, reporter) is False) #Temperature and SOC out of range
-    assert(battery_is_ok(-2,40,0.9, reporter) is False) #All parameters are out of range
-    assert(battery_is_ok(0,20,0.8, reporter) is True) #Edge values but within range
+    reporter = DetailedReporter()  
+    assert(battery_is_ok(25, 70, 0.7, reporter) is True)
+    assert(battery_is_ok(50, 85, 0, reporter) is False)
+    assert(battery_is_ok(-2, 40, 0.9, reporter) is False)
+    assert(battery_is_ok(0, 20, 0.8, reporter) is True)
